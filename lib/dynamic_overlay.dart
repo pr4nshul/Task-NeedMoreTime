@@ -1,81 +1,229 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:need_more_time/static_overlay.dart';
 
-class TimeOverlay extends StatelessWidget {
+class DynamicTimeOverlay extends StatefulWidget {
+  final int initialCounter;
+
+  const DynamicTimeOverlay({@required this.initialCounter});
+
+  @override
+  _DynamicTimeOverlayState createState() => _DynamicTimeOverlayState();
+}
+
+class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
+  int seconds;
+  int milliseconds;
+  int current;
+  int initial;
+  Timer _timer;
+  List<int> _elapsed = [];
+  List<int> _total = [];
+  Color greyish = Color(0xffefefef);
+  void startTimer() {
+    _timer = Timer.periodic(Duration(milliseconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          if (current > 0) {
+            current -= 1;
+            seconds = current ~/ 1000;
+            milliseconds = (current % 1000) ~/ 10;
+          } else {
+            _timer.cancel();
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    current = widget.initialCounter;
+    initial = widget.initialCounter;
+    seconds = widget.initialCounter ~/ 1000;
+    milliseconds = (widget.initialCounter % 1000) ~/ 10;
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Countdown(),
-          Container(
-            decoration: BoxDecoration(
-                color: Theme.of(context).accentColor,
-                border: Border.all(color: Theme.of(context).accentColor),
-                borderRadius: BorderRadius.all(Radius.circular(8))),
-            padding: EdgeInsets.all(3),
-            width: width * 0.80,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Text(
-                  "LAP",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: height*0.025,
-                  ),
-                ),
-                SizedBox(
-                  width: width*0.018,
-                ),
-                Text(
-                  "TIME",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: height*0.025,
-                  ),
-                ),
-                Text(
-                  "ELAPSED",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: height*0.025,
-                  ),
-                )
-              ],
+    startTimer();
+    return Scaffold(
+      backgroundColor: Theme.of(context).primaryColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            countDown(height, width),
+            Container(
+              decoration: BoxDecoration(
+                  color: Theme.of(context).accentColor,
+                  border: Border.all(color: Theme.of(context).accentColor),
+                  borderRadius: BorderRadius.all(Radius.circular(8))),
+              padding: EdgeInsets.all(3),
+              width: width * 0.80,
+              child: lte(height, width,"LAP","TIME","ELAPSED",Colors.white),
             ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-                color: Theme.of(context).accentColor,
-                border: Border.all(color: Theme.of(context).accentColor),
-                borderRadius: BorderRadius.all(Radius.circular(8))),
-            width: width * 0.80,
-            height: height * 0.35,
-            margin: EdgeInsets.fromLTRB(0, height * 0.01, 0, height * 0.01),
-          ),
-          Container(
-            width: width * 0.80,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                button(context, height, width,Icons.stop, height),
-                SizedBox(
-                  width: width * 0.02,
-                ),
-                button(context, height, width,Icons.circle, height*0.60),
-              ],
+            Container(
+              decoration: BoxDecoration(
+                  color: Theme.of(context).accentColor,
+                  border: Border.all(color: Theme.of(context).accentColor,width: 0),
+                  borderRadius: BorderRadius.all(Radius.circular(8))),
+              width: width * 0.80,
+              height: height * 0.35,
+              margin: EdgeInsets.fromLTRB(0, height * 0.01, 0, height * 0.01),
+              child: ListView.builder(
+                itemBuilder: (BuildContext context, int index) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      lte(height,width,(index+1).toString(),convertTime(_elapsed[index]),convertTime(_total[index]),greyish),
+                      Divider(color: greyish,thickness: height*0.002,),
+                    ],
+                  );
+                },
+                itemCount: _elapsed.length,
+              ),
             ),
-          )
-        ],
+            Container(
+              width: width * 0.80,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  button(context, height, width, Icons.stop, height, () {
+                    setState(() {
+                      if (initial > 0) {
+                        _timer.cancel();
+                      }
+                    });
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StaticTimeOverlay(),
+                      ),
+                    );
+                  }),
+                  SizedBox(
+                    width: width * 0.02,
+                  ),
+                  button(context, height, width, Icons.circle, height * 0.60,
+                      () {
+                    if (mounted) {
+                      setState(() {
+                        _total.add(initial - current);
+                        if (_elapsed.length == 0) {
+                          _elapsed.add(initial - current);
+                        } else {
+                          _elapsed.add(_total[_total.length - 1] -
+                              _total[_total.length - 2]);
+                        }
+                        //print(_total);
+                        //print(_elapsed);
+                      });
+                    }
+                  }),
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
 
-  Center button(BuildContext context, double height, double width, IconData shape, double iconSize) {
+  Container countDown(double height, double width) {
+    return Container(
+      decoration: BoxDecoration(
+          color: Theme.of(context).accentColor,
+          border: Border.all(color: Theme.of(context).accentColor),
+          borderRadius: BorderRadius.all(Radius.circular(8))),
+      width: width * 0.80,
+      margin: EdgeInsets.fromLTRB(0, height * 0.01, 0, height * 0.01),
+      height: height * 0.23,
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              seconds.toString().padLeft(2, '0'),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: height * 0.15),
+            ),
+            Text(
+              milliseconds.toString().padLeft(2, '0'),
+              style: TextStyle(
+                  color: greyish,
+                  fontWeight: FontWeight.bold,
+                  fontSize: height * 0.08),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Row lte(double height, double width,String lap,String time,String elapsed,Color color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(
+          flex: 3,
+          child: Center(
+            child: Text(
+              lap,
+              style: TextStyle(
+                color: color,
+                fontSize: height * 0.025,
+                fontWeight: FontWeight.bold
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: SizedBox(
+            width: width * 0.018,
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: Center(
+            child: Text(
+              time,
+              style: TextStyle(
+                color: color,
+                fontSize: height * 0.025,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 4,
+          child: Center(
+            child: Text(
+              elapsed,
+              style: TextStyle(
+                color: color,
+                fontSize: height * 0.025,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
+  Center button(BuildContext context, double height, double width,
+      IconData shape, double iconSize, Function func) {
     return Center(
       child: Container(
         decoration: BoxDecoration(
@@ -90,34 +238,24 @@ class TimeOverlay extends StatelessWidget {
               primary: Theme.of(context).accentColor,
               elevation: 0,
             ),
-            onPressed: (){},
-            child: Center(child: Icon(shape,color: Colors.white,size:iconSize*0.18,)),
+            onPressed: func,
+            child: Center(
+                child: Icon(
+              shape,
+              color: Colors.white,
+              size: iconSize * 0.18,
+            )),
           ),
         ),
       ),
     );
   }
-}
-
-class Countdown extends StatefulWidget {
-  @override
-  _CountdownState createState() => _CountdownState();
-}
-
-class _CountdownState extends State<Countdown> {
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
-    return Container(
-      decoration: BoxDecoration(
-          color: Theme.of(context).accentColor,
-          border: Border.all(color: Theme.of(context).accentColor),
-          borderRadius: BorderRadius.all(Radius.circular(8))),
-      width: width * 0.80,
-      margin: EdgeInsets.fromLTRB(0, height * 0.01, 0, height * 0.01),
-      height: height * 0.23,
-      child: Center(child: Text("uhca")),
-    );
+  String convertTime(int time){
+    int secondsStr = time ~/ 1000;
+    int millisecondsStr = (time % 1000) ~/ 10;
+    String str = secondsStr.toString().padLeft(2,'0');
+    str= str+":";
+    str = str+ millisecondsStr.toString().padLeft(2,'0');
+    return str;
   }
 }
