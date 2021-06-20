@@ -7,7 +7,7 @@ import 'package:need_more_time/dynamic_overlay.dart';
 class StaticTimeOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.of(context).size.width;      //using media query so that app ratio changes according to device screen
     final height = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
@@ -15,20 +15,20 @@ class StaticTimeOverlay extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            counter(context),
-            Container(
+            counter(context), //to show initial countdown
+            Container(                                    //empty container to maintain spacial consistency
               color: Theme.of(context).primaryColor,
               padding: EdgeInsets.all(3),
               width: width * 0.80,
               height: height * 0.025,
             ),
-            Container(
+            Container(                                    //empty container to maintain spacial consistency
               color: Theme.of(context).primaryColor,
               width: width * 0.80,
               height: height * 0.35,
               margin: EdgeInsets.fromLTRB(0, height * 0.01, 0, height * 0.01),
             ),
-            PlayAndLoad(),
+            PlayAndLoad(),                               //Start button
           ],
         ),
       ),
@@ -99,17 +99,17 @@ class _PlayAndLoadState extends State<PlayAndLoad> {
           primary: Theme.of(context).accentColor,
           elevation: 0,
         ),
-        child: fetch
+        child: fetch                               //checking whether the query has been called or not
             ? Icon(
-                Icons.more_horiz_sharp,
+                Icons.more_horiz_sharp,            //if yes then loading three dots
                 size: height * 0.1,
               )
             : Center(
-                child: Icon(
+                child: Icon(                       //else the play button
                 Icons.play_arrow_rounded,
                 size: height * 0.18,
               )),
-        onPressed: () async {
+        onPressed: () async {                      //created a function onPressed here itself as it is relatively a small application
           if(mounted){
             setState(() {
               fetch = true;
@@ -133,7 +133,7 @@ class _PlayAndLoadState extends State<PlayAndLoad> {
     );
   }
 
-  Future<int> getTime() async {
+  Future<int> getTime() async {                 //function to get query
     final url = Uri.parse("https://cricinshots.com/sde/moretimeplease.php");
     try {
       final response = await http.get(url);

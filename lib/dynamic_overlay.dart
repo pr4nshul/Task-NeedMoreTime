@@ -7,7 +7,7 @@ import 'package:need_more_time/static_overlay.dart';
 import 'package:http/http.dart' as http;
 
 class DynamicTimeOverlay extends StatefulWidget {
-  final int initialCounter;
+  final int initialCounter;                                   //contains the initial time
 
   const DynamicTimeOverlay({@required this.initialCounter});
 
@@ -21,10 +21,10 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
   int current;
   int initial;
   Timer _timer;
-  List<int> _elapsed = [];
-  List<int> _total = [];
+  List<int> _elapsed = [];                          //to store the lap time
+  List<int> _total = [];                            //to store the total elapsed time
   Color greyish = Color(0xffefefef);
-  void startTimer() {
+  void startTimer() {                               //timer function
     _timer = Timer.periodic(Duration(milliseconds: 1), (timer) {
       if (mounted) {
         setState(() {
@@ -60,8 +60,8 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            countDown(height, width),
-            Container(
+            countDown(height, width),                              //counter widget
+            Container(                                             //to display lap time & elapsed titles
               decoration: BoxDecoration(
                   color: Theme.of(context).accentColor,
                   border: Border.all(color: Theme.of(context).accentColor),
@@ -70,7 +70,7 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
               width: width * 0.80,
               child: lte(height, width,"LAP","TIME","ELAPSED",Colors.white),
             ),
-            Container(
+            Container(                                          // to display the time laps
               decoration: BoxDecoration(
                   color: Theme.of(context).accentColor,
                   border: Border.all(color: Theme.of(context).accentColor,width: 0),
@@ -96,7 +96,7 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  button(context, height, width, Icons.stop, height, () async{
+                  button(context, height, width, Icons.stop, height, () async{        //on pressed function for stop button
                     setState(() {
                       if (initial > 0) {
                         _timer.cancel();
@@ -114,7 +114,7 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
                     width: width * 0.02,
                   ),
                   button(context, height, width, Icons.circle, height * 0.60,
-                      () {
+                      () {                                                        //on pressed function for lap button
                     if (mounted) {
                       setState(() {
                         _total.add(initial - current);
@@ -172,7 +172,7 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
     );
   }
 
-  Row lte(double height, double width,String lap,String time,String elapsed,Color color) {
+  Row lte(double height, double width,String lap,String time,String elapsed,Color color) {          //l: lap, t:time , e:elapsed
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -253,7 +253,7 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
       ),
     );
   }
-  String convertTime(int time){
+  String convertTime(int time){        // a function to convert the int to 00:00 format
     int secondsStr = time ~/ 1000;
     int millisecondsStr = (time % 1000) ~/ 10;
     String str = secondsStr.toString().padLeft(2,'0');
@@ -261,7 +261,7 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
     str = str+ millisecondsStr.toString().padLeft(2,'0');
     return str;
   }
-  Future<void> postTime() async {
+  Future<void> postTime() async {                  // async function for the post query
     final url = Uri.parse("https://cricinshots.com/sde/takeyourtime.php");
     List<Map<String,int>> laps=[];
     for(int i=0;i< _elapsed.length;i++){
