@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:need_more_time/static_overlay.dart';
+import 'package:http/http.dart' as http;
 
 class DynamicTimeOverlay extends StatefulWidget {
   final int initialCounter;
@@ -94,12 +96,13 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  button(context, height, width, Icons.stop, height, () {
+                  button(context, height, width, Icons.stop, height, () async{
                     setState(() {
                       if (initial > 0) {
                         _timer.cancel();
                       }
                     });
+                    await postTime();
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -257,5 +260,28 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
     str= str+":";
     str = str+ millisecondsStr.toString().padLeft(2,'0');
     return str;
+  }
+  Future<void> postTime() async {
+    final url = Uri.parse("https://cricinshots.com/sde/takeyourtime.php");
+    List<Map<String,int>> laps=[];
+    for(int i=0;i< _elapsed.length;i++){
+      laps.add({
+        "id":(i+1),
+        "time": _elapsed[i],
+        "elapsed": _total[i]
+      });
+    }
+    try {
+      final response = await http.post(url,body:jsonEncode({
+        "time":initial,
+        "laps":laps,
+         "remaining":current,
+        "repo":"https://github.com/pr4nshul/Task-NeedMoreTime"
+      }) );
+      print('Status:${response.statusCode}');
+      print(response.body);
+    } catch (e) {
+      print(e.toString());
+    }
   }
 }
