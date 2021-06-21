@@ -7,7 +7,7 @@ import 'package:need_more_time/static_overlay.dart';
 import 'package:http/http.dart' as http;
 
 class DynamicTimeOverlay extends StatefulWidget {
-  final int initialCounter;                                   //contains the initial time
+  final int initialCounter; //contains the initial time
 
   const DynamicTimeOverlay({@required this.initialCounter});
 
@@ -21,10 +21,12 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
   int current;
   int initial;
   Timer _timer;
-  List<int> _elapsed = [];                          //to store the lap time
-  List<int> _total = [];                            //to store the total elapsed time
+  List<int> _elapsed = []; //to store the lap time
+  List<int> _total = []; //to store the total elapsed time
   Color greyish = Color(0xffefefef);
-  void startTimer() {                               //timer function
+
+  void startTimer() {
+    //timer function
     _timer = Timer.periodic(Duration(milliseconds: 1), (timer) {
       if (mounted) {
         setState(() {
@@ -60,20 +62,23 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            countDown(height, width),                              //counter widget
-            Container(                                             //to display lap time & elapsed titles
+            countDown(height, width), //counter widget
+            Container(
+              //to display lap time & elapsed titles
               decoration: BoxDecoration(
                   color: Theme.of(context).accentColor,
                   border: Border.all(color: Theme.of(context).accentColor),
                   borderRadius: BorderRadius.all(Radius.circular(8))),
               padding: EdgeInsets.all(3),
               width: width * 0.80,
-              child: lte(height, width,"LAP","TIME","ELAPSED",Colors.white),
+              child: lte(height, width, "LAP", "TIME", "ELAPSED", Colors.white),
             ),
-            Container(                                          // to display the time laps
+            Container(
+              // to display the time laps
               decoration: BoxDecoration(
                   color: Theme.of(context).accentColor,
-                  border: Border.all(color: Theme.of(context).accentColor,width: 0),
+                  border: Border.all(
+                      color: Theme.of(context).accentColor, width: 0),
                   borderRadius: BorderRadius.all(Radius.circular(8))),
               width: width * 0.80,
               height: height * 0.35,
@@ -83,8 +88,17 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      lte(height,width,(index+1).toString(),convertTime(_elapsed[index]),convertTime(_total[index]),greyish),
-                      Divider(color: greyish,thickness: height*0.002,),
+                      lte(
+                          height,
+                          width,
+                          (index + 1).toString(),
+                          convertTime(_elapsed[index]),
+                          convertTime(_total[index]),
+                          greyish),
+                      Divider(
+                        color: greyish,
+                        thickness: height * 0.002,
+                      ),
                     ],
                   );
                 },
@@ -96,7 +110,8 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  button(context, height, width, Icons.stop, height, () async{        //on pressed function for stop button
+                  button(context, height, width, Icons.stop, height, () async {
+                    //on pressed function for stop button
                     setState(() {
                       if (initial > 0) {
                         _timer.cancel();
@@ -114,7 +129,8 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
                     width: width * 0.02,
                   ),
                   button(context, height, width, Icons.circle, height * 0.60,
-                      () {                                                        //on pressed function for lap button
+                      () {
+                    //on pressed function for lap button
                     if (mounted) {
                       setState(() {
                         _total.add(initial - current);
@@ -172,7 +188,9 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
     );
   }
 
-  Row lte(double height, double width,String lap,String time,String elapsed,Color color) {          //l: lap, t:time , e:elapsed
+  Row lte(double height, double width, String lap, String time, String elapsed,
+      Color color) {
+    //l: lap, t:time , e:elapsed
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -182,10 +200,9 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
             child: Text(
               lap,
               style: TextStyle(
-                color: color,
-                fontSize: height * 0.025,
-                fontWeight: FontWeight.bold
-              ),
+                  color: color,
+                  fontSize: height * 0.025,
+                  fontWeight: FontWeight.bold),
             ),
           ),
         ),
@@ -253,31 +270,32 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
       ),
     );
   }
-  String convertTime(int time){        // a function to convert the int to 00:00 format
+
+  String convertTime(int time) {
+    // a function to convert the int to 00:00 format
     int secondsStr = time ~/ 1000;
     int millisecondsStr = (time % 1000) ~/ 10;
-    String str = secondsStr.toString().padLeft(2,'0');
-    str= str+":";
-    str = str+ millisecondsStr.toString().padLeft(2,'0');
+    String str = secondsStr.toString().padLeft(2, '0');
+    str = str + ":";
+    str = str + millisecondsStr.toString().padLeft(2, '0');
     return str;
   }
-  Future<void> postTime() async {                  // async function for the post query
+
+  Future<void> postTime() async {
+    // async function for the post query
     final url = Uri.parse("https://cricinshots.com/sde/takeyourtime.php");
-    List<Map<String,int>> laps=[];
-    for(int i=0;i< _elapsed.length;i++){
-      laps.add({
-        "id":(i+1),
-        "time": _elapsed[i],
-        "elapsed": _total[i]
-      });
+    List<Map<String, int>> laps = [];
+    for (int i = 0; i < _elapsed.length; i++) {
+      laps.add({"id": (i + 1), "time": _elapsed[i], "elapsed": _total[i]});
     }
     try {
-      final response = await http.post(url,body:jsonEncode({
-        "time":initial,
-        "laps":laps,
-         "remaining":current,
-        "repo":"https://github.com/pr4nshul/Task-NeedMoreTime"
-      }) );
+      final response = await http.post(url,
+          body: jsonEncode({
+            "time": initial,
+            "laps": laps,
+            "remaining": current,
+            "repo": "https://github.com/pr4nshul/Task-NeedMoreTime"
+          }));
       print('Status:${response.statusCode}');
       print(response.body);
     } catch (e) {
