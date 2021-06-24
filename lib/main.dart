@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:need_more_time/dynamic_overlay.dart';
-import 'package:need_more_time/static_overlay.dart';
+import 'package:need_more_time/Time_overlay.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -31,6 +31,6 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StaticTimeOverlay();
+    return TimeOverlay();
   }
 }
