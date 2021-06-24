@@ -25,21 +25,27 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
   List<int> _total = []; //to store the total elapsed time
   Color greyish = Color(0xffefefef);
 
-  void startTimer() {
+  void startTimer(){
     //timer function
-    _timer = Timer.periodic(Duration(milliseconds: 1), (timer) {
+    _timer = Timer.periodic(Duration(milliseconds: 10), (timer) {
       if (mounted) {
         setState(() {
           if (current > 0) {
-            current -= 1;
+            current -=10;
             seconds = current ~/ 1000;
             milliseconds = (current % 1000) ~/ 10;
           } else {
-            _timer.cancel();
+            current=0;
+            timer.cancel();
+            stopTimer();
           }
         });
       }
     });
+    if (current <= 0) {
+
+
+    }
   }
 
   @override
@@ -49,13 +55,13 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
     initial = widget.initialCounter;
     seconds = widget.initialCounter ~/ 1000;
     milliseconds = (widget.initialCounter % 1000) ~/ 10;
+    startTimer();
   }
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-    startTimer();
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
       body: Center(
@@ -113,17 +119,11 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
                   button(context, height, width, Icons.stop, height, () async {
                     //on pressed function for stop button
                     setState(() {
-                      if (initial > 0) {
+                      if (current > 0) {
                         _timer.cancel();
                       }
                     });
-                    await postTime();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => StaticTimeOverlay(),
-                      ),
-                    );
+                    stopTimer();
                   }),
                   SizedBox(
                     width: width * 0.02,
@@ -166,7 +166,8 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
       child: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
           children: [
             Text(
               seconds.toString().padLeft(2, '0'),
@@ -281,6 +282,17 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
     return str;
   }
 
+  void stopTimer(){
+    postTime().then((_){
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => StaticTimeOverlay(),
+        ),
+      );
+    });
+  }
+
   Future<void> postTime() async {
     // async function for the post query
     final url = Uri.parse("https://cricinshots.com/sde/takeyourtime.php");
@@ -288,18 +300,25 @@ class _DynamicTimeOverlayState extends State<DynamicTimeOverlay> {
     for (int i = 0; i < _elapsed.length; i++) {
       laps.add({"id": (i + 1), "time": _elapsed[i], "elapsed": _total[i]});
     }
-    try {
-      final response = await http.post(url,
-          body: jsonEncode({
-            "time": initial,
-            "laps": laps,
-            "remaining": current,
-            "repo": "https://github.com/pr4nshul/Task-NeedMoreTime"
-          }));
-      print('Status:${response.statusCode}');
-      print(response.body);
-    } catch (e) {
-      print(e.toString());
-    }
+    final json = jsonEncode({
+      "time": initial,
+      "laps": laps,
+      "remaining": current,
+      "repo": "https://github.com/pr4nshul/Task-NeedMoreTime"
+    });
+    print(json);
+    // try {
+    //   final response = await http.post(url,
+    //       body: jsonEncode({
+    //         "time": initial,
+    //         "laps": laps,
+    //         "remaining": current,
+    //         "repo": "https://github.com/pr4nshul/Task-NeedMoreTime"
+    //       }));
+    //   print('Status:${response.statusCode}');
+    //   print(response.body);
+    // } catch (e) {
+    //   print(e.toString());
+    // }
   }
 }
