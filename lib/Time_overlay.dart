@@ -333,6 +333,8 @@ class _TimeOverlayState extends State<TimeOverlay> {
     postTime().then((_) {
       setState(() {
         change=false;
+        initial=0;
+        current=0;
         seconds=0;
         milliseconds=0;
         _elapsed.clear();
